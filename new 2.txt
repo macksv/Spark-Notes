@@ -1,0 +1,23 @@
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_export \
+    --username retail_user --password itversity \
+	--table orders \
+	--target-dir "/user/macksv17/problem2/avro" \
+	--delete-target-dir \
+	--as-avrodatafile
+	
+	
+++++ Use spark to read avro file into df	
+
+	pyspark --packages com.databricks:spark-avro_2.10:2.0.1
+	
+	df = sqlContext.read.format("com.databricks.spark.avro").load("/user/macksv17/problem2/avro/part-m-00000.avro")
+	
+	sqlContext.setConf("spark.sql.parquet.compression.codec", "snappy")
+	df.write.parquet("/user/macksv17/problem2/parquet-snappy")
+	
+	++ to test ++
+	>>> sqlContext.read.parquet("/user/macksv17/problem2/parquet-snappy").show
+<bound method DataFrame.show of DataFrame[order_id: int, order_date: string, order_customer_id: int, order_status: string]>
+>>> sqlContext.read.parquet("/user/macksv17/problem2/parquet-snappy").first()
+Row(order_id=11, order_date=u'2013-07-25 00:00:00.0', order_customer_id=11600, order_status=u'DUMMY')
+>>>

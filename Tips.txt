@@ -1,0 +1,195 @@
+﻿
+Useful notes
+
+
+https://www.youtube.com/watch?v=yG9roUz3kcI
+http://arun-teaches-u-tech.blogspot.com/2017/04/cca-175-hadoop-and-spark-developer-exam.html
+http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html
+
+=========================
+
+I had given the CCA175 exam. There were some questions which could not be solved with spark 1.6. 
+There were questions where it was asked to load the hive table in an avro format, as well as write a data frame in an avro 
+format. in 1.6 this is not possible, We need addition libraries com.databricks.avro to perform the above operations. 
+I was not able to perform the above operation with sqlContext or hiveContext since they donot support avro. 
+Could you guys help in this regard
+
+
+
+=========================
+
+https://community.cloudera.com/t5/Hadoop-101-Training-Quickstart/CCA-175-Certification-Problem-SPARK-CSV-missing-Unable-to/td-p/69623
+
+CCA 175 Certification Problem SPARK-CSV missing. Unable to import via --packages MIGHT HAPPEN TO YOU [ Edited ] 
+Options
+‎07-06-2018 12:24 AM - edited ‎07-06-2018 10:15 AM
+
+I edited this post because when I posted it I was very emotional coming off of a failed exam.
+
+ 
+
+Basically to make things short. The problem was that I know testimony of 2 spark developers and my own experience in a previously failed exam, 
+that we were able to import the spark-csv.jar via the --packages import during our exam certifications, so I came prepared to handle CSV files 
+using that library as I was sure it was going to be available. This time, I couldn't import it, I ended up answering 6 out of 9 problems because 
+the 3 missing problems all relied on CSV files, and I simply didn't train on how to do this with bare spark. The techniques I've found online 
+afterwards, are all pretty cumbersome and most if not all use the map function from the RDD API, I only really trained using the Dataframe API.
+
+ 
+
+I setup a claim to certification@cloudera.com and they answered that they have never given the ability to anyone to import any third party 
+libraries. This is not true. Not only was I able to import it during my first certification exam... 2 other developers that I know who are 
+certified were able to import it as well, and following the logic, I'm pretty sure many others have been able to do so.
+
+ 
+
+In the end, this topic is here in order to raise awareness about this issue. The official statement from Cloudera was that this is not possible, 
+so be prepared to handle CSV files without spark-csv.jar, or face desperation trying to experiment techniques and browse API docs in the midst 
+of a certification exam.
+
+================  Tip 2 =====================
+
+https://www.linkedin.com/pulse/3-tips-prepare-cloudera-spark-hadoop-developer-exam-ximiao-jiang/
+
+Cloudera Spark and Hadoop Developer exam (CCA175) is a 2-hour practical exam. People are intimated by this exam because it is practical. Specifically, exam takers are asked to code in CDH to solve 8-12 scenarios, and produce the results per their instructions.
+
+Cloudera provided the scope of this exam. The required skills list seems very long. However, the exam is actually not as difficult as you thought, because all the scenarios will be focused on several fundamental skills. FYI, these skills might be too fundamental to be ignored when you prepare for the exam. That is why I am writing this post.
+
+Tip 1: Sqoop import and Sqoop export are very likely to be tested, one for each scenario. They are both very easy. You should finish each in 5 mins to save time for other scenarios. I want to point out that there are quite a few options for both import and export. Don't take it for granted that some options will not be tested. In fact, options like --fields-terminated-by, --line-terminated-by, --compression-codec, --as-parquetfile, etc. are very important. Especially for Sqoop export, you need to check the delimiter of the file to be exported and specify it correctly by using the option --input-fields-terminated-by option. Otherwise, your export task will fail. Remember you can always use >sqoop help or > sqoop help import (export). Keep in mind, you only have 2 hours. I don't think you will have time to figure out anything with "help".
+
+Tip 2: RDD transformation and save. This skill will be tested in most (maybe all) of the remained scenarios. Each scenario is very simple and short. It is quite obvious because you only have around 15 mins to solve each scenario including the time to read and understand the question, code, compute, and save results per their instructions. Before taking the exam, I thought there might be some difficult scenarios where a code stub will be provided, and the exam taker will be asked to fill in codes and submit the task through spark-submit. In fact, there is no code stub at all. You will need to write script in either pyspark or spark shell. For all the text files or whatever files to be used in these scenarios, Cloudera will provide a schema for you. Please don't try to construct the schema unless you really have to, because build a schema with structureType and structureField is very time consuming. When it asks you to read a text file, you are very likely to be able to handle it as a RDD. Most of the scenarios can be solved with 2-3 transformations. There are two points that I want to shout out for the RDD scenarios. First, read the output instructions carefully, including what features need to be output, what delimiter is used and where to save your output. If you didn't save the results correctly to the right directory, you will not get any credit from this scenario. Second (very very very important), Cloudera will ask you to save the results using various fields delimiter for different scenarios, such as ",", "\t", ctr-A, "|". Be careful that there is no argument or option in rdd.saveAsTextFile(). Don't try to change the fields delimiter in the saveAsTextFile method. You need to make the change when processing the rdd file.
+
+Tip 3: DataFrame processing. No doubt that Cloudera will test your skills in processing DataFrame. You need to be familiar with all kinds of methods for sure (not that many and very straightforward). Here I want to emphasize three points that people may not pay as much attention. First, other than the built in file format in pyspark (table, parquet, json, jdbc and orc), you must remember other popular formats (for example avro). This is very important!!! Remember that Cloudera will not give you any hint on coding. You need to remember the format and related options. For example when read avro file, you need to write sqlContext.read.format("com.databricks.spark.avro").load("/path/to/Dir"). Second, Cloudera will ask you to save Dataframe in various formats. You need to remember all options, especially for parquet file. Third (very very very important), Cloudera will ask you to save DF using specific compression (snappy, uncompressed, gzip). Keep in mind this is not something that you can set up in options. You will need to configure sqlContext: sqlContext.setConf("spark.sql.parquet.compression.codec", "snappy").
+
+If you read these 3 tips carefully, you will realize that I keep emphasize the importance of input and output. This is quite obvious because if you cannot read the data, there is no way you can score from the scenario. Similarly, if you cannot save the result or save it incorrectly, you will not get any credit for whatever you have done in data processing. Moreover, the whole CCA175 exam is about ETL (reading, easy transformation and saving).
+
+A few bonus points that I suggest you take them carefully: 1, Don't spend too much time on streaming. As I mentioned, they don't provide code stubs in the exam. To set up a streaming task without stubs takes a while. 2, Don't bother with Flume and Kafka configuration. I don't think Cloudera will test those. 3, Don't spend too much time on Dataset for now because it is only available to Scala and Java at this time. It will be unfair for python users if they tested it. I spent a lot of time on these chapters, but they were not tested.
+
+This post is based on my personal experience taking the CCA175 exam. It is possible that my viewpoint is one-sided, but I hope it helps.
+
+
+================  Tip 3 =====================
+
+
+http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html
+
+
+
+================  Tip 4 =====================
+
+
+https://tosarvesh.wixsite.com/sarveshhadoopcertify/single-post/2018/04/30/Top-10-mistakes-cloudera-certification-and-how-to-prepare-for-CCA175
+
+Top 10 mistakes cloudera certification and how to prepare for CCA175.
+May 1, 2018
+
+|
+
+Sarvesh Gupta
+
+Cloudera CCA175 is not very difficult ,if you are prepared well enough.I am going to tell ,How you should prepare and what common mistakes people do and how to avoid it.
+
+ 
+
+Top 10 Mistakes:
+
+1-People copy wrong path from different problems opened in multiple tabs in web browser.So get comfortable with Mozilla Firefox.
+
+2-People delete the data directory by mistake using hdfs dfs -rm -R , where they have to import data actually and copy the wrong path from different problem.So be very careful.Do not delete the path which actually store the data required for other problem.
+
+3-Don't panic ,2 hours are sufficient for the exam ,I got 30 minutes left for revision even after my internet connection was getting reset in every 15 minutes.
+
+4-Always  set the compress configuration to uncompressed after solving the program else you may do a mistake and save the file in other format ,which is not required for the problem you are trying to solve.
+
+5- Do not just use laptop ,use external monitor for bigger screen ,because cluster is not of high resolution and you will do mistake ,when typing because it's hard to differentiate between , and " when font size is small.
+
+6- Get yourself comfortable with the environment and must watch the video (https://www.cloudera.com/more/training/certification/cca-spark.html) on cloudera certification page and make sure you know how to increase the font size because you will need that.
+
+7-Make sure you know how to use sqoop eval command because some times, it's problem to connect to relation database,which is MySQL for cloudera so make sure you can validate your result and see structure using eval command.
+
+8-Always copy the path when needed in the program to save the file in particular directory and make sure you check the output is in correct format in the directory specified in the problem and do not spend too much time on a problem if you are stuck ,you can solve that later after completing other problems.
+
+9-Please get yourself comfortable in sublime text editor because that is the default text editor available on cluster and persist your code because sometimes ,same code can be reusable for other problems .
+
+10-Listen others but apply your own mind and use your own tricks.
+
+ 
+
+How to prepare:
+
+It's not difficult to get cloudera certified.I believe it just needs 2 to 3 months of preparation time depending on how talented you are.It should take 3 months for average person to prepare for exam.
+
+ 
+
+The best resource I have found is Durga Gadiraju's tutorial on udemy it's best for learning and preparing for cloudera certification.To practice the scenarios you can follow arun's blog (http://arun-teaches-u-tech.blogspot.in/).It's really great.I did the same thing but I created my own case studies to prepare for this exam.You can use my git-hub account ( https://github.com/tosarvesh/Bigdata_preparation ), where you can find my scripts and documents and scenarios I created to practice for the exam.It may not be well formatted but you will get great understanding of how to perform conversion ,use data frames etc,which would be very helpful and sufficient to crack the exam. 
+
+ 
+
+There is no specific language you have to use, to solve spark problems ,it can be solved using Scala,python ,what ever language you like.People ,who are comfortable in SQL they prefer to use dataframe and write SQL to solve the problem.So it's totally up to you how you solve it .Cloudera just check and verify the output.
+
+ 
+
+Launch spark shell: You can launch spark-shell using spark-shell --master yarn command it should be sufficient to solve the problem because the data-set is not that huge.If you are comfortable with additional parameters like num-executors and executor-memory you can pass that too.My strategy would be just launch separate terminal with spark-shell --master yarn in case I get a problem to load a big file and perform transformation and I will let that program run because in case you over consume the resources it could be a problem and proctor won't be able to help you out.So make sure you understand the parameters and know very well how to use them.
+
+ 
+
+Please make yourself comfortable in file conversion ,compression,loading of different file format.I am not sure there could be problems related to Apache Kafka ,flume and streaming because it's hard to validate but still you should have knowledge about it.
+
+ 
+
+For avro you just need to import that dependency using import com.databricks.spark.avro._ .Everything else will be available on cluster ,no need to import anything else.
+
+ 
+
+One last tip practice,practice and practice at least 3 to 4 times of that arun blog's problems and examples I have on my github account .you can create your own scenarios and permutation combination of file conversion.
+
+ 
+
+If you have any question you can comment on the blog below or message me using my linked-in profile : https://www.linkedin.com/in/guptasarvesh/
+
+
+
+
+================  Tip 5 =====================
+
+
+
+Exam Delivery During the exam, I faced some issues and wasted almost around 30 minutes in my examination and panicked. Some tips for a smooth exam would be
+
+Please go through the videos towards the end of the CCA playlist that covers the common issues faced by exam takers, it is very important please don't neglect it.
+Try to login into a Ubuntu machine and become familiar with how to use it.
+Learn on how to increase the font size of terminal (Go to preferences on the left top corner)
+Learn on how to run a .sh file, in case if you are not able to run it, you can open the file using vi editor and run each of the commands individually.
+Make sure you go through the question completely and then start coding, as the expected output might be different than what you thought.
+Validate the output, before moving to the next question helps if in the last minute you are not able to verify your answers.
+Set aside 15 minutes of time in the end and verify all your answers.
+If the time is over, don't leave any unsaved files and quit the examination, save all files and then end the examination.
+
+
+
+
+================  Tip 6 =====================
+
+https://bigdataplaybook.wordpress.com/2017/06/09/quick-reference-to-read-and-write-in-different-file-format-in-spark/
+
+link http://www.itversity.com/topic/different-file-formats-python/ 
+
+
+reading from local filesystem: Create Dataframe and register temp table.
+
+================  Tip 7 =====================
+
+https://www.youtube.com/watch?v=iw_fw-uxrGU
+
+
+================  Tip 8 =====================
+
+Check _ vs -  (uderscore vs dash)
+
+When you do sql and are douing counts, remeber to alias the column
+
+
+
+
+from_unixtime
+
+

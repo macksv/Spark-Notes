@@ -1,0 +1,91 @@
+
+
+
+Haddop and Spark Cert - File Formats
+https://www.youtube.com/watch?v=DfaSzkhaF0o
+
+
+=== Using sc ===
+
+df = sc.textFile(<path>)
+
+df.saveAsTextFile(<path>) 
+
+=== Using sqlContext  ===
+sqlContext.read.json
+sqlContext.read.orc
+sqlContext.read.parquet
+sqlContext.read.text
+
+sqlContext.load(<path>, "json")
+
+
+
+
+df = sqlContext
+    .read.format("com.databricks.spark.csv")
+    .option("header", "true")
+    .option("inferschema", "true")
+    .option("mode", "DROPMALFORMED")
+    .load("some_input_file.csv")
+
+
+*** read csv into RDD then to DF adding field names ***
+
+orders = sc.textFile("/public/retail_db/orders").map(lambda o: (o.split(",")[0], o.split(",")[1])).toDF(["fld1", "fld2"])
+              	
+	
+	
+	
+
+ pyspark --packages com.databricks:spark-avro_2.10:2.0.1,com.databricks:spark-csv_2.10:1.5.0 --master yarn \
+        --conf spark.ui.port=12345
+
+>>> sc.setLogLevel("ERROR")
+>>>
+>>> df = sqlContext.read.format("com.databricks.spark.csv").load("/user/macksv17/practice/orders_text/part-m-00000")
+>>> df.show()
++---+--------------------+-----+---------------+
+| C0|                  C1|   C2|             C3|
++---+--------------------+-----+---------------+
+|  1|2013-07-25 00:00:...|11599|         CLOSED|
+|  2|2013-07-25 00:00:...|  256|PENDING_PAYMENT|
+|  3|2013-07-25 00:00:...|12111|       COMPLETE|
+|  4|2013-07-25 00:00:...| 8827|         CLOSED|
+|  5|2013-07-25 00:00:...|11318|       COMPLETE|
+|  6|2013-07-25 00:00:...| 7130|       COMPLETE|
+
+
+*** another way without using format ***
+df = sqlContext.load("/user/macksv17/practice/orders_text/part-m-00000", "com.databricks.spark.csv")
+ 
+
+ *** another way adding Schema ***
+df = sqlContext.load("/user/macksv17/practice/orders_text/part-m-00000", "com.databricks.spark.csv", \
+     schema=[
+
+
+*** WRITING ***
+
+
+orders_DF.write.format("com.databricks.spark.csv").mode("Overwrite").option("delimiter", "|") \
+.option("header", "true").save("/user/macksv17/practice4/question3/results_output")
+
+
+
+
+*** to convert DF to RDD  (hadoop and Spark File Formats 1:11)   ***
+
+for i in customersDF.rdd.take(10): print(i)
+
+
+
+*** to convert RDD to DF (Create DF and Register Temp Table (7:20)***
+
+from pyspark.sql import Row
+ordersRDD = sc.textFile("/user/macksv17/retail_db/orders")
+ordersDF = ordersRDD.map(lambda o: Row(order_id = int(o.split(",")[0]), order_date = o.split(",")[1], \
+          order_customer_id = int(o.split(",")[2]), order_status = o.split(",")[3])).toDF()
+
+
+

@@ -1,0 +1,52 @@
+>>> crimeDF = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferSchema", "true").load("/public/crime/csv")
+>>> crimeDF.show()
++-------+-----------+--------------------+--------------------+----+-----------------+--------------------+--------------------+------+--------+----+--------+----+--------------+--------+------------+------------+----+--------------------+------------+-------------+--------------------+
+|     ID|Case Number|                Date|               Block|IUCR|     Primary Type|         Description|Location Description|Arrest|Domestic|Beat|District|Ward|Community Area|FBI Code|X Coordinate|Y Coordinate|Year|          Updated On|    Latitude|    Longitude|            Location|
++-------+-----------+--------------------+--------------------+----+-----------------+--------------------+--------------------+------+--------+----+--------+----+--------------+--------+------------+------------+----+--------------------+------------+-------------+--------------------+
+|5679862|   HN487108|07/24/2007 10:11:...| 054XX S ABERDEEN ST|1320|  CRIMINAL DAMAGE|          TO VEHICLE|              STREET| false|   false| 934|       9|  16|            61|      14|     1169912|     1868555|2007|04/15/2016 08:55:...|41.794811309|-87.652466989|(41.794811309, -8...|
+|5679863|   HN488302|07/24/2007 01:00:...|  082XX S TALMAN AVE|0460|          BATTERY|              SIMPLE|              STREET| false|   false| 835|       8|  18|            70|     08B|     1160134|     1850078|2007|04/15/2016 08:55:...|41.744314668|-87.688830696|(41.744314668, -8...|
+
+>>> crimeDF.registerTempTable("crimes")
+
+>>> sqlContext.sql("select concat(substr(date,7,4), substr(date,1,2)) as f_date from crimes").show()
++------+
+|f_date|
++------+
+|200707|
+
+>>> sqlContext.sql("select concat(substr(date,7,4), substr(date,1,2)) as f_date, `primary type` from crimes").show()
++------+-----------------+
+|f_date|     primary type|
++------+-----------------+
+|200707|  CRIMINAL DAMAGE|
+|200707|          BATTERY|
+
+
+>>> sqlContext.sql("select concat(substr(date,7,4), substr(date,1,2)) as f_date, count(*) as crime_count,  `primary type` from crimes group by concat(substr(date,7,4), substr(date,1,2)), `primary type`").show()
++------+-----------+--------------------+
+|f_date|crime_count|        primary type|
++------+-----------+--------------------+
+|200809|        154| CRIM SEXUAL ASSAULT|
+|200801|        312|   WEAPONS VIOLATION|
+|200802|        959|             ROBBERY|
+|200907|         61|               ARSON|
+
+>>> dfResult = sqlContext.sql("select concat(substr(date,7,4), substr(date,1,2)) as f_date, count(*) as crime_count,  `primary type` from crimes group by concat(substr(date,7,4), substr(date,1,2)), `primary type`")
+>>> sqlContext.setConf("spark.sql.csv.compression.codec", "gzip")
+>>> dfResult.write.coalesce(1).format("com.databricks.spark.csv").option("delimiter", "\t").save("/user/macksv17/solutions/soultion01/crimes_by_type_by_month")
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'DataFrameWriter' object has no attribute 'coalesce'
+>>> dfResult.coalesce(1).write.format("com.databricks.spark.csv").option("delimiter", "\t").save("/user/macksv17/solutions/soultion01/crimes_by_type_by_month")
+>>>
+
+
+
+
+[macksv17@gw02 ~]$ hadoop fs -ls /user/macksv17/solutions/soultion01/crimes_by_type_by_month
+Found 2 items
+-rw-r--r--   2 macksv17 hdfs          0 2018-11-03 02:48 /user/macksv17/solutions/soultion01/crimes_by_type_by_month/_SUCCESS
+-rw-r--r--   2 macksv17 hdfs     139590 2018-11-03 02:48 /user/macksv17/solutions/soultion01/crimes_by_type_by_month/part-00000
+[macksv17@gw02 ~]$
+
+

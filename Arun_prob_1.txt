@@ -1,0 +1,121 @@
+problem1
+
+sqoop import --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity \
+  --table orders --target-dir "/user/macksv17/problem1/orders" --as-avrodatafile --compress \
+  --compression-codec "snappy"
+
+sqoop import --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity --table order_items --target-dir "/user/macksv17/problem1/order-items" --as-avrodatafile --compress --compression-codec "snappy"
+
+
+ordersDF = sqlContext.read.load("/user/macksv17/problem1/orders", "com.databricks.spark.avro")
+
+ordersDF.show()
+
+orderItemsDF = sqlContext.read.load("/user/macksv17/problem1/order-items", "com.databricks.spark.avro")
+
+
+
+=== 4a.
+
+
+
+
+
+=== 4b.
+
+>>> ordersDF.registerTempTable("orders")
+>>> orderItemsDF.registerTempTable("order_items")
+
+
+** intermediate step to check joins **
+sqlContext.sql("select order_id, to_date(from_unixtime(cast(order_date/1000 as bigint))) as order_date_fmt, order_item_subtotal from orders o join order_items oi on (o.order_id = oi.order_item_order_id)").show()
+
+
+
+sqlContext.sql("select to_date(from_unixtime(cast(order_date/1000 as bigint))) as order_date_fmt, order_status, count(distinct order_id) as total_orders, \
+   round(sum(order_item_subtotal),2) as total_amount from orders o join order_items oi on (o.order_id = oi.order_item_order_id) \
+   group by to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status order by order_date_fmt desc, order_status asc, \
+   total_amount desc, total_orders asc").show()
+
+
++--------------+---------------+------------+------------+
+|order_date_fmt|   order_status|total_orders|total_amount|
++--------------+---------------+------------+------------+
+|    2014-07-24|       CANCELED|           2|     1254.92|
+|    2014-07-24|         CLOSED|          26|    16333.16|
+|    2014-07-24|       COMPLETE|          55|    34552.03|
+|    2014-07-24|        ON_HOLD|           4|     1709.74|
+|    2014-07-24| PAYMENT_REVIEW|           1|      499.95|
+
+   
+orderSummaryDF = sqlContext.sql("select to_date(from_unixtime(cast(order_date/1000 as bigint))) as order_date_fmt, order_status, count(distinct order_id) as total_orders, \
+    round(sum(order_item_subtotal),2) as total_amount from orders o join order_items oi on (o.order_id = oi.order_item_order_id) \
+    group by to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status order by order_date_fmt desc, order_status asc, \
+    total_amount desc, total_orders asc")
+
+
+   
+   
+   
+   
+ === 5.  
+   
+sqlContext.setConf("spark.sql.parquet.compression.codec","gzip")
+orderSummaryDF.write.parquet("/user/macksv17/problem1/result4-gzip")
+  
+ 
+
+ 
+>>> sqlContext.setConf("spark.sql.parquet.compression.codec","snappy")
+>>> orderSummaryDF.coalesce(1).write.parquet("/user/macksv17/problem1/result4-snappy")
+   
+   
+   
+   
+orderSummaryDF.coalesce(1).write.format("com.databricks.spark.csv").save("/user/macksv17/problem1/result4-csv")
+   
+[macksv17@gw02 ~]$  hadoop fs -cat /user/macksv17/problem1/result4-csv/part-00000 | more
+2014-07-24 00:00:00.0,CANCELED,2,1254.92
+2014-07-24 00:00:00.0,CLOSED,26,16333.16
+2014-07-24 00:00:00.0,COMPLETE,55,34552.03
+2014-07-24 00:00:00.0,ON_HOLD,4,1709.74
+ 
+** the order_date has time component
+
+** alternative
+orderSummaryDF.coalesce(1).map(lambda os: str(os[0]) + ',' +os[1] +',' + str(os[2]) + ',' + str(os[3])).saveAsTextFile("/user/macksv17/problem1/result4-csv2")
+
+[macksv17@gw02 ~]$  hadoop fs -cat /user/macksv17/problem1/result4-csv2/part-00000 | head
+2014-07-24,CANCELED,2,1254.92
+2014-07-24,CLOSED,26,16333.16
+2014-07-24,COMPLETE,55,34552.03
+2014-07-24,ON_HOLD,4,1709.74
+
+
+=== 6.
+  
+   
+   create table macksv17_result (order_date date, order_status varchar(250), total_orders int, total_amount float);
+   
+sqoop export --connect "jdbc:mysql://ms.itversity.com/retail_export" --username retail_user --password itversity --table "macksv17_result" \
+   --export-dir "/user/macksv17/problem1/result4-csv2" --fields-terminated-by ","
+
+  
+
+   
+   
+   
+   
+*** To change date format -  DO not use to_date ***
+
+sqlContext.sql("select order_id, (from_unixtime(cast(order_date/1000 as bigint), 'dd-MM-yyyy')) from orders").show()
++--------+----------+
+|order_id|       _c1|
++--------+----------+
+|       1|25-07-2013|
+|       2|25-07-2013|
+ 
+  
+  
+  
+  

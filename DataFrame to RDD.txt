@@ -1,0 +1,41 @@
+
+
+from pyspark.sql.types import *
+
+rdd = sc.parallelize([(19, 174430, 3.4), (19, 169786, 3.4)])
+
+schema = StructType( [
+    StructField('user_id', IntegerType()),
+    StructField('game_id', IntegerType()),
+    StructField('rating', FloatType())
+    ])
+
+df = spark.createDataFrame(rdd, schema)
+
+df.show()
+
+====================================
+
+If you don't want to specify a schema, do not convert use Row in the RDD. If you simply have a normal RDD (not an RDD[Row]) you can use toDF() directly.
+
+df = rdd.map(lambda x: x.split(",")).toDF()
+You can give names to the columns using toDF() as well,
+
+df = rdd.map(lambda x: x.split(",")).toDF("col1_name", ..., "colN_name")
+If what you have is an RDD[Row] you need to actually know the type of each column. This can be done by specifying a schema or as follows
+
+val df = rdd.map({ 
+  case Row(val1: String, ..., valN: Long) => (val1, ..., valN)
+}).toDF("col1_name", ..., "colN_name")
+
+
+=======================
+
+from pyspark.sql import Row
+l = [('Ankit',25),('Jalfaizy',22),('saurabh',20),('Bala',26)]
+rdd = sc.parallelize(l)
+people = rdd.map(lambda x: Row(name=x[0], age=int(x[1])))
+schemaPeople = sqlContext.createDataFrame(people)
+
+
+======================

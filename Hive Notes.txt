@@ -1,0 +1,19 @@
+Hive Notes
+
+[macksv17@gw02 ~]$ hadoop fs -ls /apps/hive/warehouse/macks*
+Found 3 items
+drwxrwxrwx   - macksv17 hdfs          0 2018-09-14 02:04 /apps/hive/warehouse/macksv17_db.db/categories
+drwxrwxrwx   - macksv17 hdfs          0 2018-10-09 01:56 /apps/hive/warehouse/macksv17_db.db/my_products
+drwxrwxrwx   - macksv17 hdfs          0 2018-09-14 01:38 /apps/hive/warehouse/macksv17_db.db/temp_tab
+
+
+mysql -u retail_dba -h nn01.itversity.com -p
+
+
+
+
+
+
+	
+	
+

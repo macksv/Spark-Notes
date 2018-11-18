@@ -1,0 +1,57 @@
+To paste use Shift Insert if CTRL-V does not work
+
+
+https://labs.itversity.com/#/
+
+https://github.com/dgadiraju
+
+https://github.com/dgadiraju/data
+
+On the lab: /data/retail_db
+
+Connecting to lab:
+
+ssh username@gw01.itversity.com
+
+discuss.itversity.com
+
+
+mysql -u retail_user -h ms.itversity.com -p
+
+
+===================
+
+Hadoop
+
+cd /etc/hadoop/conf
+core-site.xml
+   fs.defaultFS
+     
+hdfs-site.xml
+   dfs.blocksize
+   dfs.replication
+
+hadoop fs -copyFromLocal /data/retail_db /user/macksv
+
+hadoop fs -du -s -h <hdfs_dir>
+
+hdfs fsck <hdfs_dir> -files -blocks -locations
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --target-dir /user/dgadiraju/sqoop_import/retail_db/order_items
+
+
+
+
+
+[macksv17@gw02 ~]$ sqoop import --connect jdbc:mysql://ms.itversity.com/retail_db \
+> --username retail_user --password itversity \
+> --table products \
+> --hive-import --create-hive-table --hive-table my_products --hive-database macksv17_db
+
+
+

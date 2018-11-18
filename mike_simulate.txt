@@ -1,0 +1,157 @@
+
+
+http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html
+
+pyspark --master yarn --conf spark.ui.port=12888
+sc.setLogLevel("ERROR")
+
+
+
+sqoop list-databases --connect jdbc:mysql://ms.itversity.com:3306 \
+    --username retail_user \
+	--password itversity
+	
+>>>>>>>>>>>>>>>>>>>>>>>>
+mysql -u retail_user -h ms.itversity.com -p
+password:itversity
+
+To use hr database
+
+mysql -u hr_user -h ms.itversity.com -p
+password:itversity
+
+To use h1b database
+
+mysql -u h1b_user -h ms.itversity.com -p
+password:itversity
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	
+	
+	
+
+sqoop list-tables --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+    --username retail_user \
+	--password itversity
+	
+	
+	
+* after creating the db in hive	
+	
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+    --username retail_user \
+	--password itversity \
+	--table categories \
+	--where "category_id between 1 and 22" \
+	--delete-target-dir \
+	--hive-import \
+	--hive-database macksv17_db
+	
+	
+	
+
+Problem Scenario 39 : You have been given two files
+spark16/file1.txt
+1,9,5
+2,7,4
+3,8,3
+spark16/file2.txt
+1,g,h
+2,i,j
+3,k,l
+Load these two tiles as Spark RDD and join them to produce the below results
+(l,((9,5),(g,h)))
+(2, ((7,4), (i,j))) (3, ((8,3), (k,l)))
+And write code snippet which will sum the second columns of above joined results (5+4+3).
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>
+
+hadoop fs -mkdir /user/macksv17/spark16/
+ hadoop fs -copyFromLocal file1.txt /user/macksv17/spark16/file1.txt
+ hadoop fs -copyFromLocal file2.txt /user/macksv17/spark16/file2.txt
+ 
+f1_rdd = sc.textFile("/user/macksv17/spark16/file1.txt")
+f2_rdd = sc.textFile("/user/macksv17/spark16/file2.txt")
+
+# create a pair which is required for join
+f1_pair_rdd = f1_rdd.map(lambda r:(int(r.split(",")[0]), r.split(",")[1:]))
+f1_pair_rdd.first()
+
+f2_pair_rdd = f2_rdd.map(lambda r:(int(r.split(",")[0]), r.split(",")[1:]))
+f2_pair_rdd.first()
+
+f1_pair_rdd.join(f2_pair_rdd).collect()
+
+
+
+================================
+
+Problem Scenario 17 : You have been given following mysql database details as well as
+other info.
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish below assignment.
+1. Create a table in hive as below, create table departments_hiveOl(department_id int,
+department_name string, avg_salary int);
+2. Create another table in mysql using below statement CREATE TABLE IF NOT EXISTS
+departments_hive01(id int, department_name varchar(45), avg_salary int);
+3. Copy all the data from departments table to departments_hive01 using insert into
+departments_hive01 select a.*, null from departments a;
+Also insert following records as below
+insert into departments_hive01 values(777, "Not known",1000);
+insert into departments_hive01 values(8888, null,1000);
+insert into departments_hive01 values(666, null,1100);
+4. Now import data from mysql table departments_hive01 to this hive table. Please make
+sure that data should be visible using below hive command. Also, while importing if null
+value found for department_name column replace it with "" (empty string) and for id column
+with -999 select * from departments_hive;
+
+In MySQL under retail_export DB
+CREATE TABLE IF NOT EXists mv_departments_hive01(id int, department_name varchar(45), avg_salary int);
+
+In Hive
+create table mv_departments_hiveOl(department_id int,
+department_name string, avg_salary int);
+
+# because we don't have PK, we have to use -m 1
+
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_export \
+    --username retail_user \
+	--password itversity \
+	--table mv_departments_hive01 \
+	--delete-target-dir \
+	--hive-import \
+	--hive-database default \
+	--hive-table mv_departments_hiveOl \
+	--null-string "" \
+	-m 1
+
+??? how do we update the id with -999 ???
+
+
+>>>>>> Get min or Max of a specific order_id  <<<<<<<
+
+orderItems = sc.textFile("/public/retail_db/order_items")
+
+orderItemsFiltered =  orderItems.filter(lambda oi:int(oi.split(",")[1]) == 2)
+
+orderItemsFiltered.reduce(lambda x,y: x if x.split(",")[4] < y.split(",")[4] else y)
+
+>>>>>>>>> count by Key <<<<<<<<<<<
+
+ orders = sc.textFile("/public/retail_db/orders")
+
+statuses = orders.map(lambda o:(o.split(",")[3],1))
+
+statuses.countByKey()
+
+
+????? aggregateByKey   need more info 
+
+
+
+
+

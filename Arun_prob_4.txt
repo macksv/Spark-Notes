@@ -1,0 +1,22 @@
+
+sqoop import --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity --as-textfile --target-dir /user/macksv17/problem4/text --fields-terminated-by "\t" -m 1 --table orders
+
+sqoop import --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity --as-avrodatafile --target-dir /user/macksv17/problem4/avro --fields-terminated-by "\t" -m 1 --table orders
+
+sqoop import --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity --as-parquetfile --target-dir /user/macksv17/problem4/parquet --fields-terminated-by "\t" -m 1 --table orders
+
+
+
+pyspark --master yarn --conf spark.ui.port=12322 --packages com.databricks:spark-avro_2.10:2.0.1,com.databricks:spark-csv_2.10:1.5.0
+
+>>> df = sqlContext.read.format("com.databricks.spark.avro").load("/user/macksv17/problem4/avro")
+
+sqlContext.setConf("spark.sql.parquet.compression.codec", "snappy")
+
+df.coalesce(1).write.format("parquet").save("/user/macksv17/problem4/parquet-snappy-compress")
+
+
+
+
+
+

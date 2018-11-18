@@ -1,0 +1,58 @@
+ordersDF = sqlContext.read.format("com.databricks.spark.csv").load("/public/retail_db/orders")
+
+>>> ordersDF.show()
++---+--------------------+-----+---------------+
+| C0|                  C1|   C2|             C3|
++---+--------------------+-----+---------------+
+|  1|2013-07-25 00:00:...|11599|         CLOSED|
+|  2|2013-07-25 00:00:...|  256|PENDING_PAYMENT|
+|  3|2013-07-25 00:00:...|12111|       COMPLETE|
+|  4|2013-07-25 00:00:...| 8827|         CLOSED|
+
+
+>>> customersDF = sqlContext.read.format("com.databricks.spark.csv").load("/public/retail_db/customers")
+>>> customersDF.show()
++---+-----------+---------+---------+---------+--------------------+-------------+---+-----+
+| C0|         C1|       C2|       C3|       C4|                  C5|           C6| C7|   C8|
++---+-----------+---------+---------+---------+--------------------+-------------+---+-----+
+|  1|    Richard|Hernandez|XXXXXXXXX|XXXXXXXXX|  6303 Heather Plaza|  Brownsville| TX|78521|
+|  2|       Mary|  Barrett|XXXXXXXXX|XXXXXXXXX|9526 Noble Embers...|    Littleton| CO|80126|
+|  3|        Ann|    Smith|XXXXXXXXX|XXXXXXXXX|3422 Blue Pioneer...|       Caguas| PR|00725|
+
+
+>>> ordersDF.registerTempTable("orders")
+>>> customersDF.registerTempTable("customers")
+
+
+sqlContext.sql("select c.c2, c.c1 from customers c left join orders o on o.c2 = c.c0 where o.c2 is null order by c.c2, c.c1").show()
+
++-------+-------+-----+
+|     c2|     c1|   c0|
++-------+-------+-----+
+| Bolton|   Mary| 8343|
+|Ellison| Albert| 1808|
+|  Green|Carolyn| 4927|
+| Greene|   Mary|  339|
+|Harrell|   Mary|  219|
+
+>>> resultDF = sqlContext.sql("select c.c2, c.c1 from customers c left join orders o on o.c2 = c.c0 where o.c2 is null order by c.c2, c.c1")
+>>>
+>>> resultDF.coalesce(1).write.format("com.databricks.spark.csv").save("/user/macksv17/solutions/solution/inactive_customers")
+>>>
+
+
+Verify
+
+[macksv17@gw02 ~]$ hadoop fs -cat /user/macksv17/solutions/solution/inactive_customers/part-00000
+Bolton,Mary
+Ellison,Albert
+Green,Carolyn
+Greene,Mary
+Harrell,Mary
+
+
+
+
+
+
+

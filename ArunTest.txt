@@ -1,0 +1,81 @@
+
+
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+--username retail_user --password itversity \
+--as-avrodatafile \
+--compress \
+--compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+--target-dir /user/macksv17/problem1/orders \
+--table orders
+
+
+**** try no compress
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+--username retail_user --password itversity \
+--as-avrodatafile \
+--target-dir /user/macksv17/problem1/orders_nocomp \
+--table orders
+
+
+
+sqoop import --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+--username retail_user --password itversity \
+--as-avrodatafile \
+--compress \
+--compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+--target-dir /user/macksv17/problem1/order-items \
+--table order_items
+
+
+
+orders_DF = sqlContext.read.format("com.databricks.spark.avro").load("/user/macksv17/problem1/orders")
+
+orderItems_DF = sqlContext.read.format("com.databricks.spark.avro").load("/user/macksv17/problem1/order-items")
+
+
+orders_joined_DF = orders_DF.join(orderItems_DF, orders_DF.order_id == orderItems_DF.order_item_order_id)
+
+orders_joined_DF.registerTempTable("orders_comb_tab")
+
+sqlContext.sql("select * from orders_comb_tab limit 5").show()
+
+
+4a.
+
+
+
+
+4b.
+
+sqlContext.sql("select to_date(from_unixtime(order_date / 1000)) as formatted_order_date, order_status, count(distinct order_id) as total_orders, \
+   round(sum(order_item_subtotal), 2) as total_amount from orders_comb_tab \
+   group by to_date(from_unixtime(order_date / 1000)), order_status \
+   order by formatted_order_date desc, order_status, total_amount desc, total_orders").show()
+   
+
+4c.
+
+
+
+
+*** Alternative
+orders_DF.registerTempTable("orders_tab")
+orderItems_DF.registerTempTable("order_items_tab")
+
+joined_DF = orders_DF.join(orderItems_DF, orders_DF.order_id == orderItems_DF.order_item_order_id)
+joined_DF.show()
+
+
+
+
+res_DF = sqlContext.sql("select order_date, order_status, count(distinct order_id) as total_orders, sum(order_item_subtotal) as total_amount \
+  from orders_tab o join  order_items_tab oi on o.order_id = oi.order_item_order_id \
+  group by order_date, order_status")
+  
+
+sqlContext.sql("select from_to_date(unixtime(order_date / 1000)), order_status, count(distinct order_id) as total_orders, sum(order_item_subtotal) as total_amount \
+  from orders_tab o join  order_items_tab oi on o.order_id = oi.order_item_order_id \
+  group by order_date, order_status").show()
+
+
+

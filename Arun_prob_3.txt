@@ -1,0 +1,47 @@
+Arun prob 3
+
+
+sqoop import-all-tables --connect "jdbc:mysql://ms.itversity.com/retail_db" --username retail_user --password itversity --warehouse-dir /user/macksv17/retail_stage.db \
+--as-avrodatafile --compress --compression-codec snappy -m 1
+
+hadoop fs -get /user/macksv17/retail_stage.db/orders/part-m-00000.avro
+
+avro-tools getschema part-m-00000.avro > orders.avsc
+
+
+[macksv17@gw02 ~]$ hadoop fs -mkdir /user/macksv17/schemas
+[macksv17@gw02 ~]$ hadoop fs -mkdir /user/macksv17/schemas/orders
+
+hadoop fs -copyFromLocal orders.avsc /user/macksv17/schemas/orders
+
+create external table orders_sqoop
+                  > STORED AS AVRO
+                  > LOCATION '/user/macksv17/retail_stage.db/orders'
+                  > TBLPROPERTIES('avro.schema.url'='/user/macksv17/schemas/orders/orders.avsc');
+
+
+
+=== maintain metadata in hive metastore (alternate solution)
+ create external table orders_sqoop_2 (
+  order_id int,
+  order_date bigint,
+  order_customer_id int,
+  order_status string)
+  stored as AVRO
+  location '/user/macksv17/retail_stage.db/orders';
+
+
+select a.order_id, from_unixtime(int(a.order_date/1000), 'dd-MM-yyyy') as order_date_fmt, a.order_customer_id, a.order_status
+from orders_sqoop a
+where from_unixtime(int(a.order_date/1000), 'dd-MM-yyyy') in
+   (
+    select b.order_date_fmt from 
+	 (
+      select from_unixtime(int(c.order_date/1000), 'dd-MM-yyyy') as order_date_fmt, count(*) as total_orders from orders_sqoop c
+      group by from_unixtime(int(c.order_date/1000), 'dd-MM-yyyy')
+      order by total_orders desc limit 1
+	  ) b	  
+	);
+
+
+
